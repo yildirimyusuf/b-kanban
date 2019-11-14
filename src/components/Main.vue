@@ -10,13 +10,12 @@
               <font-awesome-icon v-if="group.id == 3" :icon="['fas', 'check-circle']" />
               {{ group.name }}
             </h1>
-            <feather-icon type="more-vertical"></feather-icon>
           </span>
           <vue-draggable-group
             v-model="group.tasks"
             :groups="groups"
             :data-id="group.id"
-            @change="onDrop"
+            @change="intervalFetchData"
           >
             <ul class="drag-inner-list" :data-id="group.id">
               <li class="drag-item" v-for="item in group.tasks" :key="item.id" :data-id="item.id">
@@ -102,16 +101,48 @@ export default {
         dropzoneSelector: ".drag-inner-list",
         draggableSelector: ".drag-item",
         onDrop: function(id) {
-          /* eslint-disable no-console */
-          console.log(id.items[0].dataset.id);
-          var config = {
-            headers: { "Access-Control-Allow-Origin": "*" }
+          var item_id = id.items[0].dataset.id;
+          let current_datetime = new Date();
+          let formatted_date =
+            current_datetime.getDate() +
+            "-" +
+            (current_datetime.getMonth() + 1) +
+            "-" +
+            current_datetime.getFullYear();
+          const requestBody = {
+            taskCategory: id.droptarget.attributes[0].value,
+            title: id.items[0].childNodes[0].nextSibling.innerText,
+            desc: id.items[0].childNodes[1].nextSibling.innerText,
+            cdate: formatted_date,
+            date: id.items[0].childNodes[2].nextSibling.innerText.split(
+              "Due date: "
+            )[1]
           };
+
           axios
-            .delete(
-              "http://localhost:8080/tasks/" + id.items[0].dataset.id,
-              config
-            )
+            .delete("http://localhost:8080/tasks/" + item_id)
+            .then(obj => {
+              const config = {
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded"
+                }
+              };
+              axios
+                .post(
+                  "http://localhost:8080/api/task",
+                  qs.stringify(requestBody),
+                  config
+                )
+                .then(obj => {
+                  /* eslint-disable no-console */
+                  console.log(obj);
+                })
+                .catch(function(error) {
+                  /* eslint-disable no-console */
+                  console.log(error);
+                });
+              console.log(obj);
+            })
             .catch(function(error) {
               /* eslint-disable no-console */
               console.log(error);
@@ -120,10 +151,14 @@ export default {
       }
     };
   },
-  mounted() {
+  created() {
     axios.get("http://localhost:8080/api/task").then(response => {
       this.groups = response.data;
     });
+    this.intervalFetchData();
+  },
+  mounted() {
+    
   },
   name: "Main",
   components: {
@@ -167,21 +202,9 @@ export default {
         this.$refs.modal.hide();
       });
     },
-    onDragend: function(id) {
-      axios
-        .delete("http://localhost:8080/api/task/" + id)
-        .catch(function(error) {
-          /* eslint-disable no-console */
-          console.log(error);
-        }); // assuming your response payload is in a data object
+    onDragend: function() {
     },
-    onDrop: function(id) {
-      axios
-        .delete("http://localhost:8080/api/task/" + id)
-        .catch(function(error) {
-          /* eslint-disable no-console */
-          console.log(error);
-        }); // assuming your response payload is in a data object
+    onDrop: function() {
     },
     onGroupsChange: function(id) {
       axios
@@ -223,7 +246,7 @@ export default {
     intervalFetchData: function() {
       setInterval(() => {
         this.APICall();
-      }, 1000);
+      }, 2200);
     }
   }
 };
