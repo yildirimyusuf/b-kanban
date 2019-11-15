@@ -15,7 +15,7 @@
             v-model="group.tasks"
             :groups="groups"
             :data-id="group.id"
-            @change="intervalFetchData"
+            @change="APICall"
           >
             <ul class="drag-inner-list" :data-id="group.id">
               <li class="drag-item" v-for="item in group.tasks" :key="item.id" :data-id="item.id">
@@ -136,6 +136,7 @@ export default {
                 .then(obj => {
                   /* eslint-disable no-console */
                   console.log(obj);
+                  this.APICall();
                 })
                 .catch(function(error) {
                   /* eslint-disable no-console */
@@ -155,11 +156,9 @@ export default {
     axios.get("http://localhost:8080/api/task").then(response => {
       this.groups = response.data;
     });
-    this.intervalFetchData();
+    this.APICall();
   },
-  mounted() {
-    
-  },
+  mounted() {},
   name: "Main",
   components: {
     datePicker
@@ -193,6 +192,7 @@ export default {
           qs.stringify(requestBody),
           config
         )
+        .then(this.APICall())
         .catch(function(error) {
           /* eslint-disable no-console */
           console.log(error);
@@ -201,19 +201,11 @@ export default {
       this.$nextTick(() => {
         this.$refs.modal.hide();
       });
+      this.APICall();
     },
-    onDragend: function() {
-    },
-    onDrop: function() {
-    },
-    onGroupsChange: function(id) {
-      axios
-        .delete("http://localhost:8080/api/task/" + id)
-        .catch(function(error) {
-          /* eslint-disable no-console */
-          console.log(error);
-        }); // assuming your response payload is in a data object
-    },
+    onDragend: function() {},
+    onDrop: function() {},
+    onGroupsChange: function() {},
     APICall: function() {
       axios.get("http://localhost:8080/api/task").then(response => {
         this.groups = response.data;
@@ -241,12 +233,6 @@ export default {
           /* eslint-disable no-console */
           console.log(error);
         });
-      this.intervalFetchData();
-    },
-    intervalFetchData: function() {
-      setInterval(() => {
-        this.APICall();
-      }, 2200);
     }
   }
 };
