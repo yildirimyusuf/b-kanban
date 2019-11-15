@@ -1,4 +1,4 @@
-# b-kanban
+# VueJS - BootStrap - Kanban Board FrontEnd
 
 ## Project setup
 ```
